@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { StyleSheet, Image, SafeAreaView, View, Text, TouchableOpacity } from 'react-native'
+import AsyncStorage from '@react-native-community/async-storage'
 
 import Logo from '../assets/logo.png'
 import Dislike from '../assets/dislike.png'
@@ -22,25 +23,35 @@ const Main = (props) => {
         loadUsers()
     }, [id])
 
-    handleLike = async (id) => {
-        await Api.post(`/devs/${id}/likes`, null, {
+    handleLike = async () => {
+        const [user, ...restUser] = users
+        await Api.post(`/devs/${user._id}/likes`, null, {
             headers: { user: id }
         })
 
-        setUsers(users.filter(user => user._id !== id))
+        setUsers(restUser)
     }
 
-    handleDislike = async (id) => {
-        await Api.post(`/devs/${id}/dislikes`, null, {
+    handleDislike = async () => {
+        const [user, ...restUser] = users
+        await Api.post(`/devs/${user._id}/dislikes`, null, {
             headers: { user: id }
         })
 
-        setUsers(users.filter(user => user._id !== id))
+        setUsers(restUser)
+    }
+
+    handleLogout = async () => {
+        await AsyncStorage.clear()
+        navigation.navigate('Login')
     }
 
     return (
         <SafeAreaView style={styles.container}>
-            <Image source={Logo} style={styles.logo} />
+            <TouchableOpacity onPress={handleLogout}>
+                <Image source={Logo} style={styles.logo} />
+            </TouchableOpacity>
+
             <View style={styles.cardsContainer}>
                 {
                     users.length > 0 ?
@@ -58,10 +69,10 @@ const Main = (props) => {
                 }
             </View>
             <View style={styles.buttonsContainer}>
-                <TouchableOpacity style={styles.button}>
+                <TouchableOpacity style={styles.button} onPress={handleDislike}>
                     <Image source={Dislike} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.button}>
+                <TouchableOpacity style={styles.button} onPress={handleLike}>
                     <Image source={Like} />
                 </TouchableOpacity>
             </View>
